@@ -16,6 +16,7 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     AsyncStorage,
+    Linking,
 } from 'react-native';
 
 
@@ -56,9 +57,31 @@ export default class Detail extends Component {
         this.setState({
             data:jsonData,
             ready:true,
+            videoUri:'',
         });
-
+        this.fetchVideo(jsonData.mobile_url);
     }
+    fetchVideo= async(mobile_url)=>{
+        let pageHtml=await fetch(mobile_url);
+        pageHtml=await pageHtml.text();
+        const  regex=/href="([\w|\W]*\.mp4)"/;
+        const result=pageHtml.match(regex);
+        if (result && result[1]){
+            const  videoUri=result[1];
+            this.setState({
+                videoUri:videoUri
+            });
+        }
+    };
+    playVideo=()=>{
+        const {videoUri}=this.state;
+        if (videoUri){
+            Linking.openURL(videoUri);
+        } else{
+            alert("正在获取，请稍后");
+        }
+
+    };
 
 
     render() {
@@ -69,9 +92,13 @@ export default class Detail extends Component {
                 {
                     ready?
                         <View style={styles.container}>
-                            <ImageBackground source={{uri:image}} style={styles.image}>
-                                <Image source={require('../src/play.png')} style={styles.play}/>
-                            </ImageBackground>
+
+                            <TouchableOpacity onPress={this.playVideo}>
+                                <ImageBackground source={{uri:image}} style={styles.image}>
+                                    <Image source={require('../src/play.png')} style={styles.play}/>
+                                </ImageBackground>
+                            </TouchableOpacity>
+
                             <Text style={styles.title}>{title}</Text>
                             <Text style={styles.content}>简介：{summary}</Text>
 
